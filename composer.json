@@ -1,11 +1,12 @@
 {
-  "name": "softok2/rest-api-client",
+  "name": "softok2/api-client-wrapper",
+  "description": "A basic wrapper for consuming API",
   "license": "MIT",
   "authors": [
     {
       "role": "Developer",
       "name": "Franky",
-      "email": "franky@softok2.com"
+      "email": "frank@softok2.com"
     }
   ],
   "autoload": {
