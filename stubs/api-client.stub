@@ -1,0 +1,23 @@
+<?php
+
+declare(strict_types=1);
+
+namespace {{ namespace }};
+
+use Softok2\RestApiClient\Services\API\ClientResourceInterface;
+use Softok2\RestApiClient\Services\RestClientInterface;
+
+class {{ class }} implements ClientResourceInterface
+{
+    public function __construct(protected RestClientInterface $client)
+    {
+    }
+
+    /**
+     * Retrieve the 'slug' to hook this class into global service client...
+     */
+    public static function getSlug(): string
+    {
+        return strtolower( '{{ class }}' );
+    }
+}

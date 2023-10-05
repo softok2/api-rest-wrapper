@@ -1,0 +1,48 @@
+{
+  "name": "softok2/rest-api-client",
+  "license": "MIT",
+  "authors": [
+    {
+      "role": "Developer",
+      "name": "Franky",
+      "email": "franky@softok2.com"
+    }
+  ],
+  "autoload": {
+    "psr-4": {
+      "Softok2\\RestApiClient\\": "src/"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "Softok2\\RestApiClient\\Tests\\": "tests/",
+      "App\\": "vendor/orchestra/testbench-core/laravel/app"
+    }
+  },
+  "require": {
+    "php": "^8.1",
+    "guzzlehttp/guzzle": "^7.0"
+  },
+  "minimum-stability": "dev",
+  "prefer-stable": true,
+  "config": {
+    "sort-packages": true,
+    "preferred-install": "dist",
+    "optimize-autoloader": true,
+    "allow-plugins": {
+      "pestphp/pest-plugin": true
+    }
+  },
+  "require-dev": {
+    "laravel/pint": "^1.13",
+    "orchestra/testbench": "^8.12",
+    "pestphp/pest": "^2.20"
+  },
+  "extra": {
+    "laravel": {
+      "providers": [
+        "Softok2\\Providers\\ServiceProvider"
+      ]
+    }
+  }
+}
