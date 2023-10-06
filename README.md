@@ -20,7 +20,7 @@ composer require softok2/api-client-wrapper
 Publishing the config file is optional:
 
 ```bash
-php artisan vendor:publish --provider="Softok2\ApiWrapperServiceProvider" --tag="config"
+php artisan vendor:publish --provider="Softok2\RestApiClient\Providers\ServiceProvider" --tag="config"
 ```
 ## Environment Variables
 
