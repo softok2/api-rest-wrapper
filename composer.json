@@ -1,5 +1,5 @@
 {
-  "name": "softok2/api-client-wrapper",
+  "name": "softok2/api-wrapper",
   "description": "A basic wrapper for consuming API",
   "license": "MIT",
   "authors": [
@@ -42,7 +42,7 @@
   "extra": {
     "laravel": {
       "providers": [
-        "Softok2\\Providers\\ServiceProvider"
+        "Softok2\\RestApiClient\\Providers\\ServiceProvider"
       ]
     }
   }
