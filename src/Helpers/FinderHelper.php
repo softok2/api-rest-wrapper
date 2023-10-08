@@ -9,26 +9,11 @@ use Symfony\Component\Finder\Finder;
 class FinderHelper
 {
     /**
-     * Load all filenames in the given directory.
-     *
-     * @param $paths
-     * @return array
-     */
-    public static function loadFileNames($paths): array
-    {
-        return collect(static::load($paths))
-            ->map(function (SplFileInfo $file) {
-                return $file->getFilename();
-            })->toArray();
-    }
-
-    /**
      * Load all files in the given directory.
      *
-     * @param string|array $paths
-     * @return array
+     * @return array<SplFileInfo>
      */
-    public static function load($paths): array
+    public static function load(mixed $paths)
     {
         $paths = array_unique(Arr::wrap($paths));
 
@@ -43,7 +28,7 @@ class FinderHelper
         $files = [];
 
         foreach ((new Finder())->in($paths)->files() as $file) {
-            $files [] = $file;
+            $files[] = $file;
         }
 
         return $files;

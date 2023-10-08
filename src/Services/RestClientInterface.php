@@ -8,56 +8,46 @@ use Throwable;
 interface RestClientInterface
 {
     /**
-     * @throws GuzzleException
-     * @throws Throwable
+     * @param  array<string, mixed>  $body
      */
     public function post(
         string $path,
-        $body,
-        $token,
-        $onError = null,
-        $onSuccess = null,
-        $parametersOption = 'form_params'
-    );
+        array $body = [],
+        string $parametersOption = 'form_params'
+    ): mixed;
 
     /**
-     * @throws GuzzleException
-     * @throws Throwable
+     * @param  array<string, mixed>  $queryParams
      */
     public function get(
         string $path,
-        $body,
-        $token,
-        $onError = null,
-        $onSuccess = null,
-        $parametersOption = 'form_params'
-    );
+        array $queryParams = [],
+        string $parametersOption = 'query_params'
+    ): mixed;
 
     /**
-     * @throws GuzzleException
-     * @throws Throwable
+     * @param  array<string, mixed>  $body
      */
     public function patch(
         string $path,
-        $body,
-        $token,
-        $onError = null,
-        $onSuccess = null,
-        $parametersOption = 'form_params'
-    );
+        array $body = [],
+        string $parametersOption = 'form_params'
+    ): mixed;
 
     /**
-     * @throws GuzzleException
-     * @throws Throwable
+     * @param  array<string, mixed>  $body
      */
     public function delete(
         string $path,
-        $body,
-        $token,
-        $onError = null,
-        $onSuccess = null,
-        $parametersOption = 'form_params'
-    );
+        array $body = [],
+        string $parametersOption = 'form_params'
+    ): mixed;
+
+    public function onFailures(callable $callback): self;
+
+    public function onSuccess(callable $callback): self;
+
+    public function withAuth(string $authToken): self;
 
     public function initResourcesClasses(): void;
 }

@@ -1,49 +1,72 @@
 {
-  "name": "softok2/api-wrapper",
-  "description": "A basic wrapper for consuming API",
-  "license": "MIT",
-  "authors": [
-    {
-      "role": "Developer",
-      "name": "Franky",
-      "email": "frank@softok2.com"
+    "name": "softok2/api-wrapper",
+    "description": "A basic wrapper for consuming API",
+    "license": "MIT",
+    "authors": [
+        {
+            "role": "Developer",
+            "name": "Franky",
+            "email": "frank@softok2.com"
+        }
+    ],
+    "autoload": {
+        "psr-4": {
+            "Softok2\\RestApiClient\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Softok2\\RestApiClient\\Tests\\": "tests/",
+            "App\\": "vendor/orchestra/testbench-core/laravel/app",
+            "Workbench\\App\\": "workbench/app/",
+            "Workbench\\Database\\Factories\\": "workbench/database/factories/",
+            "Workbench\\Database\\Seeders\\": "workbench/database/seeders/"
+        }
+    },
+    "require": {
+        "php": "^8.1",
+        "guzzlehttp/guzzle": "^7.0"
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true,
+    "config": {
+        "sort-packages": true,
+        "preferred-install": "dist",
+        "optimize-autoloader": true,
+        "allow-plugins": {
+            "pestphp/pest-plugin": true
+        }
+    },
+    "require-dev": {
+        "laravel/pint": "^1.13",
+        "orchestra/testbench": "^8.12",
+        "pestphp/pest": "^2.20",
+        "phpstan/phpstan": "^1.10"
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Softok2\\RestApiClient\\Providers\\ServiceProvider"
+            ]
+        }
+    },
+    "scripts": {
+        "post-autoload-dump": [
+            "@clear",
+            "@prepare"
+        ],
+        "clear": "@php vendor/bin/testbench package:purge-skeleton --ansi",
+        "prepare": "@php vendor/bin/testbench package:discover --ansi",
+        "build": "@php vendor/bin/testbench workbench:build --ansi",
+        "serve": [
+            "@build",
+            "@php vendor/bin/testbench serve"
+        ],
+        "lint": [
+            "@php vendor/bin/pint"
+        ],
+        "test": [
+            "@php vendor/bin/pest"
+        ]
     }
-  ],
-  "autoload": {
-    "psr-4": {
-      "Softok2\\RestApiClient\\": "src/"
-    }
-  },
-  "autoload-dev": {
-    "psr-4": {
-      "Softok2\\RestApiClient\\Tests\\": "tests/",
-      "App\\": "vendor/orchestra/testbench-core/laravel/app"
-    }
-  },
-  "require": {
-    "php": "^8.1",
-    "guzzlehttp/guzzle": "^7.0"
-  },
-  "minimum-stability": "dev",
-  "prefer-stable": true,
-  "config": {
-    "sort-packages": true,
-    "preferred-install": "dist",
-    "optimize-autoloader": true,
-    "allow-plugins": {
-      "pestphp/pest-plugin": true
-    }
-  },
-  "require-dev": {
-    "laravel/pint": "^1.13",
-    "orchestra/testbench": "^8.12",
-    "pestphp/pest": "^2.20"
-  },
-  "extra": {
-    "laravel": {
-      "providers": [
-        "Softok2\\RestApiClient\\Providers\\ServiceProvider"
-      ]
-    }
-  }
 }

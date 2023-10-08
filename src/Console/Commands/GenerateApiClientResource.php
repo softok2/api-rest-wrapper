@@ -19,6 +19,6 @@ class GenerateApiClientResource extends GeneratorCommand
 
     protected function getDefaultNamespace($rootNamespace): string
     {
-        return "{$rootNamespace}\\Services\\API";
+        return "{$rootNamespace}\\Services\\ApiResources";
     }
 }

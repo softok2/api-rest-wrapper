@@ -2,11 +2,10 @@
 
 namespace Softok2\RestApiClient\Services;
 
+use Exception;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\ClientException;
 use GuzzleHttp\Exception\GuzzleException;
-use GuzzleHttp\Exception\RequestException;
-use Illuminate\Support\Facades\Log;
 use ReflectionException;
 use Softok2\RestApiClient\Helpers\FinderHelper;
 use Softok2\RestApiClient\Services\API\RequestPayload;
@@ -18,15 +17,33 @@ class RestClientService implements RestClientInterface
 
     protected string $url;
 
-    protected string $secret;
+    protected ?string $secret;
+
+    /**
+     * @var callable
+     */
+    protected $onSuccess = null;
+
+    /**
+     * @var callable
+     */
+    protected $onFailures = null;
 
     protected int $timeout;
 
+    protected ?string $authToken = null;
+
+    /**
+     * @var array<string, string>
+     */
     protected array $headers = [
         'Accept' => 'application/json',
         'Content-Type' => 'application/json',
     ];
 
+    /**
+     * @throws ReflectionException
+     */
     public function __construct(
         string $url,
         int $timeout,
@@ -41,6 +58,9 @@ class RestClientService implements RestClientInterface
         $this->initResourcesClasses();
     }
 
+    /**
+     * @return array<string, string>
+     */
     public function getHeaders(): array
     {
         return $this->headers;
@@ -55,7 +75,7 @@ class RestClientService implements RestClientInterface
         ]);
     }
 
-    public function addHeader($key, $value): self
+    public function addHeader(string $key, string $value): self
     {
         $this->headers[$key] = $value;
 
@@ -64,16 +84,12 @@ class RestClientService implements RestClientInterface
         return $this;
     }
 
-    /**
-     * @throws GuzzleException
-     * @throws Throwable
-     */
-    public function sendRequest(RequestPayload $payload)
+    public function sendRequest(RequestPayload $payload): mixed
     {
-        if ($payload->getAuthToken()) {
+        if ($this->authToken) {
             $this->addHeader(
                 'Authorization',
-                'Bearer '.$payload->getAuthToken()
+                'Bearer '.$this->authToken
             );
         }
 
@@ -88,24 +104,36 @@ class RestClientService implements RestClientInterface
                 $options
             );
 
-            $resp = $response->getBody();
+            $ret = json_decode(
+                $response->getBody()->getContents(),
+                true
+            );
 
-            if ($payload->hasOnSuccess()) {
-                return $payload->getOnSuccess()(
-                    json_decode($resp->getContents(), true)
-                );
+            if ($this->onSuccess) {
+                return call_user_func_array($this->onSuccess, [$ret]);
             }
 
-            return json_decode($resp->getContents(), true);
+            return $ret;
 
-        } catch (RequestException|ClientException $e) {
-            Log::error($e->getMessage());
+        } catch (ClientException $e) {
+            $ret = json_decode(
+                $e->getResponse()->getBody()->getContents(),
+                true
+            );
 
-            if ($payload->hasOnError()) {
-                return $payload->getOnError()($e);
+            if ($this->onFailures) {
+                return call_user_func_array($this->onFailures, [$ret]);
             }
 
-            return $e;
+            return $ret;
+        } catch (GuzzleException|Exception|Throwable $e) {
+            $ret = [config('rest-api-client.default_exception_key') => $e->getMessage()];
+
+            if ($this->onFailures) {
+                return call_user_func_array($this->onFailures, [$ret]);
+            }
+
+            return $ret;
         }
     }
 
@@ -114,20 +142,15 @@ class RestClientService implements RestClientInterface
      */
     public function post(
         string $path,
-        $body,
-        $token,
-        $onError = null,
-        $onSuccess = null,
-        $parametersOption = 'form_params'
-    ) {
+        array $body = [],
+        string $parametersOption = 'form_params'
+    ): mixed {
 
         $payload = new RequestPayload(
+            'POST',
             $path,
             $body,
-            $onError,
-            $onSuccess,
-            'POST',
-            $token
+            $parametersOption
         );
 
         return $this->sendRequest($payload);
@@ -138,19 +161,13 @@ class RestClientService implements RestClientInterface
      */
     public function get(
         string $path,
-        $body,
-        $token,
-        $onError = null,
-        $onSuccess = null,
-        $parametersOption = 'form_params'
-    ) {
+        array $queryParams = [],
+        string $parametersOption = 'query_params'
+    ): mixed {
         $payload = new RequestPayload(
-            $path,
-            $body,
-            $onError,
-            $onSuccess,
             'GET',
-            $token,
+            $path,
+            $queryParams,
             $parametersOption
         );
 
@@ -162,19 +179,13 @@ class RestClientService implements RestClientInterface
      */
     public function patch(
         string $path,
-        $body,
-        $token,
-        $onError = null,
-        $onSuccess = null,
-        $parametersOption = 'form_params'
-    ) {
+        array $body = [],
+        string $parametersOption = 'form_params'
+    ): mixed {
         $payload = new RequestPayload(
+            'PATCH',
             $path,
             $body,
-            $onError,
-            $onSuccess,
-            'PATCH',
-            $token,
             $parametersOption
         );
 
@@ -186,23 +197,38 @@ class RestClientService implements RestClientInterface
      */
     public function delete(
         string $path,
-        $body,
-        $token,
-        $onError = null,
-        $onSuccess = null,
-        $parametersOption = 'form_params'
-    ) {
+        array $body = [],
+        string $parametersOption = 'form_params'
+    ): mixed {
         $payload = new RequestPayload(
+            'DELETE',
             $path,
             $body,
-            $onError,
-            $onSuccess,
-            'DELETE',
-            $token,
             $parametersOption
         );
 
         return $this->sendRequest($payload);
+    }
+
+    public function onFailures(callable $callback): self
+    {
+        $this->onFailures = $callback;
+
+        return $this;
+    }
+
+    public function onSuccess(callable $callback): self
+    {
+        $this->onSuccess = $callback;
+
+        return $this;
+    }
+
+    public function withAuth(string $authToken): self
+    {
+        $this->authToken = $authToken;
+
+        return $this;
     }
 
     /**

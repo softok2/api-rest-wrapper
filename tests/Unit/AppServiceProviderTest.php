@@ -30,7 +30,7 @@ it('registers RestClientInterface binding', function () {
     $this->assertInstanceOf(RestClientService::class, $restClient);
 });
 
-it('create the data transfer object when called', function (string $class) {
+it('create the api resources class', function (string $class) {
     $this->artisan(
         GenerateApiClientResource::class,
         ['name' => $class],
@@ -38,7 +38,7 @@ it('create the data transfer object when called', function (string $class) {
 
     assertTrue(
         File::exists(
-            path: app_path("Services/API/$class.php"),
+            path: config('rest-api-client.resources_path')."/$class.php",
         ),
     );
 })->with([

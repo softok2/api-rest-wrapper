@@ -11,7 +11,7 @@ return [
     |
     */
 
-    'url' => env('REST_API_URL', 'http://localhost:8000/api/v1/'),
+    'url' => (string) env('REST_API_URL', 'localhost:8000'),
 
     /*
      |--------------------------------------------------------------------------
@@ -22,7 +22,7 @@ return [
      |
      */
 
-    'secret' => env('REST_API_SECRET', ''),
+    'secret' => (string) env('REST_API_SECRET', ''),
 
     /*
     |--------------------------------------------------------------------------
@@ -33,7 +33,7 @@ return [
     |
     */
 
-    'timeout' => (int) env('REST_API_TIMEOUT', 300),
+    'timeout' => env('REST_API_TIMEOUT', 300),
 
     /*
     |--------------------------------------------------------------------------
@@ -43,7 +43,7 @@ return [
     | This value represent the path to put the generated resources api classes.
     |
     */
-    'resources_path' => app_path('Services/API'),
+    'resources_path' => app_path('Services/ApiResources'),
 
     /*
     |--------------------------------------------------------------------------
@@ -53,5 +53,16 @@ return [
     | This value represent the namespace for the generated resources api classes.
     |
     */
-    'namespace' => 'App\\Services\\API\\',
+    'namespace' => 'App\\Services\\ApiResources\\',
+
+    /*
+      |--------------------------------------------------------------------------
+      | Rest API  default exception key
+      |--------------------------------------------------------------------------
+      |
+      | This value represent the default exception key.
+      | This key is used to get the exception message from the response.
+      |
+      */
+    'default_exception_key' => 'error',
 ];

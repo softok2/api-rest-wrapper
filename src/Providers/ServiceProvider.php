@@ -12,12 +12,12 @@ final class ServiceProvider extends BaseServiceProvider
     public function boot(): void
     {
         $this->publishes([
-            __DIR__ . '/../../config/rest-api-client.php' => config_path('rest-api-client.php'),
+            __DIR__.'/../../config/rest-api-client.php' => config_path('rest-api-client.php'),
         ], 'config');
 
         if ($this->app->runningInConsole()) {
             $this->commands([
-                GenerateApiClientResource::class
+                GenerateApiClientResource::class,
             ]);
         }
     }
@@ -26,7 +26,8 @@ final class ServiceProvider extends BaseServiceProvider
     {
         // CCM API Service ...
         $this->app->bind(RestClientInterface::class, function () {
-            $config = config('rest-api-client');
+            $config = (array) config('rest-api-client');
+
             return new RestClientService(
                 $config['url'],
                 $config['timeout'],
