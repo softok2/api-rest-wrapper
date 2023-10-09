@@ -3,7 +3,6 @@
 use Illuminate\Support\Str;
 use Softok2\RestApiClient\Helpers\FinderHelper;
 use Softok2\RestApiClient\Services\RestClientInterface;
-use Softok2\RestApiClient\Services\RestClientService;
 
 use function PHPUnit\Framework\assertTrue;
 
@@ -67,9 +66,5 @@ it('load bearer token in header', function () {
 
 function forceBind(): void
 {
-    app()->bind(RestClientInterface::class,
-        fn () => new RestClientService(
-            'https://jsonplaceholder.typicode.com',
-            config('rest-api-client.timeout')
-        ));
+    app(RestClientInterface::class)->setUrl('https://jsonplaceholder.typicode.com');
 }

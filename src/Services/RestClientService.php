@@ -75,15 +75,23 @@ class RestClientService implements RestClientInterface
         ]);
     }
 
+    /**
+     * @throws ReflectionException
+     */
     public function addHeader(string $key, string $value): self
     {
         $this->headers[$key] = $value;
 
-        $this->initClient();
-
-        return $this;
+        return new static(
+            url: $this->url,
+            timeout: $this->timeout,
+            secret: $this->secret
+        );
     }
 
+    /**
+     * @throws ReflectionException
+     */
     public function sendRequest(RequestPayload $payload): mixed
     {
         if ($this->authToken) {
@@ -139,6 +147,7 @@ class RestClientService implements RestClientInterface
 
     /**
      * {@inheritDoc}
+     * @throws ReflectionException
      */
     public function post(
         string $path,
@@ -158,6 +167,7 @@ class RestClientService implements RestClientInterface
 
     /**
      * {@inheritDoc}
+     * @throws ReflectionException
      */
     public function get(
         string $path,
@@ -176,6 +186,7 @@ class RestClientService implements RestClientInterface
 
     /**
      * {@inheritDoc}
+     * @throws ReflectionException
      */
     public function patch(
         string $path,
@@ -194,6 +205,7 @@ class RestClientService implements RestClientInterface
 
     /**
      * {@inheritDoc}
+     * @throws ReflectionException
      */
     public function delete(
         string $path,
@@ -227,6 +239,21 @@ class RestClientService implements RestClientInterface
     public function withAuth(string $authToken): self
     {
         $this->authToken = $authToken;
+
+        return $this;
+    }
+
+    /**
+     */
+    public function setUrl(string $url): self
+    {
+        app()->bind(RestClientInterface::class, function () use ($url) {
+            return new static(
+                url: $url,
+                timeout: $this->timeout,
+                secret: $this->secret
+            );
+        });
 
         return $this;
     }

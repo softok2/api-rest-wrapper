@@ -74,9 +74,9 @@ You can even add custom callable functions to handle success and error response:
 ```php
 <?php
 
-    public function login(array $data, callable $onSuccess, callable $onError): mixed
+    public function login(array $data): mixed
     {
-        return $this->client->post('/login', $data, $onSuccess, $onError)
+        return $this->client->post('/login', $data)
     }
 ```
 
@@ -87,12 +87,7 @@ You can even add custom callable functions to handle success and error response:
 
 class AuthController extends Controller
 {
-    public function __construct(protected RestClientInterface $client)
-    {
-    }
-
-  
-    public function index()
+    public function index(RestClientInterface $client)
     {
         
         $data = [

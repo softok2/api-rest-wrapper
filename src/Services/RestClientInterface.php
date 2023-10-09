@@ -2,9 +2,6 @@
 
 namespace Softok2\RestApiClient\Services;
 
-use GuzzleHttp\Exception\GuzzleException;
-use Throwable;
-
 interface RestClientInterface
 {
     /**
@@ -42,6 +39,8 @@ interface RestClientInterface
         array $body = [],
         string $parametersOption = 'form_params'
     ): mixed;
+
+    public function setUrl(string $url): self;
 
     public function onFailures(callable $callback): self;
 
