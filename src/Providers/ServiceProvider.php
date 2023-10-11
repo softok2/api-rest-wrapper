@@ -24,14 +24,14 @@ final class ServiceProvider extends BaseServiceProvider
 
     public function register(): void
     {
-        // CCM API Service ...
+        // Bind API Service ...
         $this->app->bind(RestClientInterface::class, function () {
             $config = (array) config('rest-api-client');
 
             return new RestClientService(
-                $config['url'],
-                $config['timeout'],
-                $config['secret']
+                url: $config['url'],
+                timeout: $config['timeout'],
+                authHandler: $config['auth_handler'],
             );
         });
 

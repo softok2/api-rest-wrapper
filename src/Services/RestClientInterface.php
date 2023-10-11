@@ -40,7 +40,7 @@ interface RestClientInterface
         string $parametersOption = 'form_params'
     ): mixed;
 
-    public function setUrl(string $url): self;
+    public function setUrl(string $url, $options = []): self;
 
     public function onFailures(callable $callback): self;
 

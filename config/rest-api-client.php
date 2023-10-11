@@ -15,14 +15,14 @@ return [
 
     /*
      |--------------------------------------------------------------------------
-     | Rest API  Secret token to perform requests
+     | Rest API auth handler (jwt, basic or null)
      |--------------------------------------------------------------------------
      |
      | This value is the secret token of your rest api.
      |
      */
 
-    'secret' => (string) env('REST_API_SECRET', ''),
+    'auth_handler' => (string) env('REST_API_AUTH_HANDLER'),
 
     /*
     |--------------------------------------------------------------------------
@@ -64,5 +64,25 @@ return [
       | This key is used to get the exception message from the response.
       |
       */
-    'default_exception_key' => 'error',
+    'default_exception_key' => 'message',
+
+    /*
+      |--------------------------------------------------------------------------
+      | Auth handlers configurations ...
+      |--------------------------------------------------------------------------
+      |
+      | Only support jwt and basic auth options.
+      | This value represent the configurations for the auth handlers.
+      |
+      */
+    'auth_handler_options' => [
+        'jwt' => [
+            'token' => env('REST_API_TOKEN', ''),
+        ],
+        'basic' => [
+            'username' => env('REST_API_BASIC_USERNAME', 'username'),
+            'password' => env('REST_API_BASIC_PASSWORD', 'password'),
+        ],
+        null => [],
+    ],
 ];

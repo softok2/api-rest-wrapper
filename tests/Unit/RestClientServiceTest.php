@@ -19,7 +19,8 @@ it('initialize resource classes', function () {
     $property = $class::getSlug();
 
     assertTrue(
-        is_a(app(RestClientInterface::class)->$property, config('rest-api-client.namespace').'Auth')
+        is_a(app(RestClientInterface::class)->$property,
+            config('rest-api-client.namespace').'Auth')
     );
 });
 
@@ -64,7 +65,20 @@ it('load bearer token in header', function () {
     assertTrue($clientInstance->getHeaders()['Authorization'] === 'Bearer '.$token);
 });
 
-function forceBind(): void
+it('load basic auth parameters in request options', function () {
+    forceBind('basic');
+
+    $clientInstance = app(RestClientInterface::class);
+
+    $clientInstance->get('posts');
+
+    assertTrue($clientInstance->getOptions()['auth'][0] === 'username');
+});
+
+function forceBind($authHandler = null): void
 {
-    app(RestClientInterface::class)->setUrl('https://jsonplaceholder.typicode.com');
+    app(RestClientInterface::class)->setUrl(
+        url: 'https://jsonplaceholder.typicode.com',
+        options: ['authHandler' => $authHandler]
+    );
 }

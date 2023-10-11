@@ -6,8 +6,10 @@ use Exception;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\ClientException;
 use GuzzleHttp\Exception\GuzzleException;
+use Illuminate\Http\Response;
 use ReflectionException;
 use Softok2\RestApiClient\Helpers\FinderHelper;
+use Softok2\RestApiClient\Services\API\ClientResponse;
 use Softok2\RestApiClient\Services\API\RequestPayload;
 use Throwable;
 
@@ -17,7 +19,11 @@ class RestClientService implements RestClientInterface
 
     protected string $url;
 
-    protected ?string $secret;
+    protected string $authHandler;
+
+    protected ?string $authToken = null;
+
+    protected array $options = [];
 
     /**
      * @var callable
@@ -31,27 +37,23 @@ class RestClientService implements RestClientInterface
 
     protected int $timeout;
 
-    protected ?string $authToken = null;
-
     /**
      * @var array<string, string>
      */
-    protected array $headers = [
-        'Accept' => 'application/json',
-        'Content-Type' => 'application/json',
-    ];
+    protected array $headers = [];
 
     /**
      * @throws ReflectionException
+     * @throws Exception
      */
     public function __construct(
         string $url,
         int $timeout,
-        string $secret = null
+        string $authHandler
     ) {
         $this->url = $url;
         $this->timeout = $timeout;
-        $this->secret = $secret;
+        $this->authHandler = $authHandler;
 
         $this->initClient();
 
@@ -66,32 +68,26 @@ class RestClientService implements RestClientInterface
         return $this->headers;
     }
 
+    /**
+     * @throws Exception
+     */
     protected function initClient(): void
     {
-        $this->client = new Client([
+        $this->options = [
             'base_uri' => $this->url,
             'timeout' => $this->timeout,
-            'headers' => $this->getHeaders(),
-        ]);
+        ];
+
+        $this->setUpAuthHandler();
+
+        $this->client = new Client($this->options);
     }
 
-    /**
-     * @throws ReflectionException
-     */
-    public function addHeader(string $key, string $value): self
+    protected function addHeader(string $key, string $value): void
     {
         $this->headers[$key] = $value;
-
-        return new static(
-            url: $this->url,
-            timeout: $this->timeout,
-            secret: $this->secret
-        );
     }
 
-    /**
-     * @throws ReflectionException
-     */
     public function sendRequest(RequestPayload $payload): mixed
     {
         if ($this->authToken) {
@@ -100,6 +96,9 @@ class RestClientService implements RestClientInterface
                 'Bearer '.$this->authToken
             );
         }
+
+        // Prepare request headers
+        $options['headers'] = $this->getHeaders();
 
         // Prepare request params
         $options[$payload->getParametersOption()] = $payload->getBody();
@@ -112,42 +111,55 @@ class RestClientService implements RestClientInterface
                 $options
             );
 
-            $ret = json_decode(
-                $response->getBody()->getContents(),
-                true
+            $clientResponse = new ClientResponse(
+                statusCode: $response->getStatusCode(),
+                content: json_decode(
+                    $response->getBody()->getContents(),
+                    true
+                ),
             );
 
             if ($this->onSuccess) {
-                return call_user_func_array($this->onSuccess, [$ret]);
+                return call_user_func_array($this->onSuccess, [$clientResponse]);
             }
 
-            return $ret;
+            return $clientResponse;
 
         } catch (ClientException $e) {
-            $ret = json_decode(
+            $content = json_decode(
                 $e->getResponse()->getBody()->getContents(),
                 true
             );
 
+            $clientResponse = new ClientResponse(
+                statusCode: $e->getResponse()->getStatusCode(),
+                content: $content,
+                exception: $e
+            );
+
             if ($this->onFailures) {
-                return call_user_func_array($this->onFailures, [$ret]);
+                return call_user_func_array($this->onFailures, [$clientResponse]);
             }
 
-            return $ret;
+            return $clientResponse;
         } catch (GuzzleException|Exception|Throwable $e) {
-            $ret = [config('rest-api-client.default_exception_key') => $e->getMessage()];
+
+            $clientResponse = new ClientResponse(
+                statusCode: Response::HTTP_INTERNAL_SERVER_ERROR,
+                content: [config('rest-api-client.default_exception_key') => $e->getMessage()],
+                exception: $e
+            );
 
             if ($this->onFailures) {
-                return call_user_func_array($this->onFailures, [$ret]);
+                return call_user_func_array($this->onFailures, [$clientResponse]);
             }
 
-            return $ret;
+            return $clientResponse;
         }
     }
 
     /**
      * {@inheritDoc}
-     * @throws ReflectionException
      */
     public function post(
         string $path,
@@ -167,7 +179,6 @@ class RestClientService implements RestClientInterface
 
     /**
      * {@inheritDoc}
-     * @throws ReflectionException
      */
     public function get(
         string $path,
@@ -186,7 +197,6 @@ class RestClientService implements RestClientInterface
 
     /**
      * {@inheritDoc}
-     * @throws ReflectionException
      */
     public function patch(
         string $path,
@@ -205,7 +215,6 @@ class RestClientService implements RestClientInterface
 
     /**
      * {@inheritDoc}
-     * @throws ReflectionException
      */
     public function delete(
         string $path,
@@ -236,24 +245,23 @@ class RestClientService implements RestClientInterface
         return $this;
     }
 
-    public function withAuth(string $authToken): self
+    public function withAuth(?string $authToken): self
     {
         $this->authToken = $authToken;
 
         return $this;
     }
 
-    /**
-     */
-    public function setUrl(string $url): self
+    public function setUrl(string $url, $options = []): self
     {
-        app()->bind(RestClientInterface::class, function () use ($url) {
-            return new static(
-                url: $url,
-                timeout: $this->timeout,
-                secret: $this->secret
-            );
-        });
+        app()->bind(RestClientInterface::class,
+            function () use ($url, $options) {
+                return new static(
+                    url: $url,
+                    timeout: $options['timeout'] ?? $this->timeout,
+                    authHandler: $options['authHandler'] ?? $this->authHandler
+                );
+            });
 
         return $this;
     }
@@ -282,5 +290,31 @@ class RestClientService implements RestClientInterface
                 }
             }
         }
+    }
+
+    /**
+     * @throws Exception
+     */
+    public function setUpAuthHandler(): void
+    {
+        if (! in_array($this->authHandler, ['jwt', 'basic', null])) {
+            throw new Exception('Invalid auth handler. Only support jwt and basic');
+        }
+
+        if ($this->authHandler === 'basic') {
+            $this->options = array_merge($this->options, [
+                'auth' => [
+                    config('rest-api-client.auth_handler_options.basic.username'),
+                    config('rest-api-client.auth_handler_options.basic.password'),
+                ],
+            ]);
+        } elseif ($this->authHandler === 'jwt') {
+            $this->withAuth(config('rest-api-client.auth_handler_options.jwt.token'));
+        }
+    }
+
+    public function getOptions(): array
+    {
+        return $this->options;
     }
 }
