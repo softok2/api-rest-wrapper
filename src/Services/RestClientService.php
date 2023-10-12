@@ -6,6 +6,8 @@ use Exception;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\ClientException;
 use GuzzleHttp\Exception\GuzzleException;
+use GuzzleHttp\Exception\RequestException;
+use GuzzleHttp\Exception\ServerException;
 use Illuminate\Http\Response;
 use ReflectionException;
 use Softok2\RestApiClient\Helpers\FinderHelper;
@@ -125,7 +127,7 @@ class RestClientService implements RestClientInterface
 
             return $clientResponse;
 
-        } catch (ClientException $e) {
+        } catch (ClientException|ServerException|RequestException $e) {
             $content = json_decode(
                 $e->getResponse()->getBody()->getContents(),
                 true
