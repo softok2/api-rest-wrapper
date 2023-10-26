@@ -185,7 +185,7 @@ class RestClientService implements RestClientInterface
     public function get(
         string $path,
         array $queryParams = [],
-        string $parametersOption = 'query_params'
+        string $parametersOption = 'query'
     ): mixed {
         $payload = new RequestPayload(
             'GET',

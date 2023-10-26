@@ -19,7 +19,7 @@ interface RestClientInterface
     public function get(
         string $path,
         array $queryParams = [],
-        string $parametersOption = 'query_params'
+        string $parametersOption = 'query'
     ): mixed;
 
     /**
