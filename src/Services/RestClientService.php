@@ -42,7 +42,9 @@ class RestClientService implements RestClientInterface
     /**
      * @var array<string, string>
      */
-    protected array $headers = [];
+    protected array $headers = [
+        'Accept' => 'application/json',
+    ];
 
     /**
      * @throws ReflectionException
