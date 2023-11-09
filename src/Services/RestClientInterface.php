@@ -46,7 +46,7 @@ interface RestClientInterface
 
     public function onSuccess(callable $callback): self;
 
-    public function withAuth(string $authToken): self;
+    public function bearer(string $bearerToken): self;
 
     public function initResourcesClasses(): void;
 }

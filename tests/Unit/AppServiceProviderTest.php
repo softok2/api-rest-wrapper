@@ -42,6 +42,6 @@ it('create the api resources class', function (string $class) {
         ),
     );
 })->with([
-    'Auth',
+    'Login',
     'Profile',
 ]);

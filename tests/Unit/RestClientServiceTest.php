@@ -19,8 +19,8 @@ it('initialize resource classes', function () {
     $property = $class::getSlug();
 
     assertTrue(
-        is_a(app(RestClientInterface::class)->$property,
-            config('rest-api-client.namespace').'Auth')
+        is_a(app(RestClientInterface::class)->{$property},
+            config('rest-api-client.namespace').'Login')
     );
 });
 
@@ -58,9 +58,9 @@ it('load bearer token in header', function () {
 
     $token = Str::random();
 
-    $clientInstance = app(RestClientInterface::class)->withAuth($token);
+    $clientInstance = app(RestClientInterface::class)->bearer($token);
 
-    $clientInstance->get('posts');
+    $clientInstance->get('posts/1');
 
     assertTrue($clientInstance->getHeaders()['Authorization'] === 'Bearer '.$token);
 });
@@ -70,9 +70,9 @@ it('load basic auth parameters in request options', function () {
 
     $clientInstance = app(RestClientInterface::class);
 
-    $clientInstance->get('posts');
+    $clientInstance->get('posts/1');
 
-    assertTrue($clientInstance->getOptions()['auth'][0] === 'username');
+    assertTrue($clientInstance->getBasicAuth()[0] === 'username');
 });
 
 function forceBind($authHandler = null): void

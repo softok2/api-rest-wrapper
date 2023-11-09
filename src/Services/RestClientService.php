@@ -9,6 +9,7 @@ use GuzzleHttp\Exception\GuzzleException;
 use GuzzleHttp\Exception\RequestException;
 use GuzzleHttp\Exception\ServerException;
 use Illuminate\Http\Response;
+use Illuminate\Support\Arr;
 use ReflectionException;
 use Softok2\RestApiClient\Helpers\FinderHelper;
 use Softok2\RestApiClient\Services\API\ClientResponse;
@@ -23,9 +24,9 @@ class RestClientService implements RestClientInterface
 
     protected string $authHandler;
 
-    protected ?string $authToken = null;
+    protected ?string $bearerToken = null;
 
-    protected array $options = [];
+    protected array $basicHttpAuth = [];
 
     /**
      * @var callable
@@ -59,9 +60,9 @@ class RestClientService implements RestClientInterface
         $this->timeout = $timeout;
         $this->authHandler = $authHandler;
 
-        $this->initClient();
-
-        $this->initResourcesClasses();
+        $this->initClient()
+            ->setUpAuthHandler()
+            ->initResourcesClasses();
     }
 
     /**
@@ -75,16 +76,14 @@ class RestClientService implements RestClientInterface
     /**
      * @throws Exception
      */
-    protected function initClient(): void
+    protected function initClient(): self
     {
-        $this->options = [
+        $this->client = new Client([
             'base_uri' => $this->url,
             'timeout' => $this->timeout,
-        ];
+        ]);
 
-        $this->setUpAuthHandler();
-
-        $this->client = new Client($this->options);
+        return $this;
     }
 
     protected function addHeader(string $key, string $value): void
@@ -94,11 +93,14 @@ class RestClientService implements RestClientInterface
 
     public function sendRequest(RequestPayload $payload): mixed
     {
-        if ($this->authToken) {
+        // Authorize request if needed
+        if ($this->bearerToken) {
             $this->addHeader(
                 'Authorization',
-                'Bearer '.$this->authToken
+                'Bearer '.$this->bearerToken
             );
+        } elseif (! empty($this->auth)) {
+            $options['auth'] = $this->auth;
         }
 
         // Prepare request headers
@@ -124,7 +126,8 @@ class RestClientService implements RestClientInterface
             );
 
             if ($this->onSuccess) {
-                return call_user_func_array($this->onSuccess, [$clientResponse]);
+                return call_user_func_array($this->onSuccess,
+                    [$clientResponse]);
             }
 
             return $clientResponse;
@@ -142,7 +145,8 @@ class RestClientService implements RestClientInterface
             );
 
             if ($this->onFailures) {
-                return call_user_func_array($this->onFailures, [$clientResponse]);
+                return call_user_func_array($this->onFailures,
+                    [$clientResponse]);
             }
 
             return $clientResponse;
@@ -155,7 +159,8 @@ class RestClientService implements RestClientInterface
             );
 
             if ($this->onFailures) {
-                return call_user_func_array($this->onFailures, [$clientResponse]);
+                return call_user_func_array($this->onFailures,
+                    [$clientResponse]);
             }
 
             return $clientResponse;
@@ -249,15 +254,35 @@ class RestClientService implements RestClientInterface
         return $this;
     }
 
-    public function withAuth(?string $authToken): self
+    public function bearer(?string $bearerToken): self
     {
-        $this->authToken = $authToken;
+        $this->bearerToken = $bearerToken;
 
         return $this;
     }
 
+    public function basicAuth(?string $username, ?string $password): self
+    {
+        $this->basicHttpAuth = [$username, $password];
+
+        return $this;
+    }
+
+    /**
+     * Available key options are timeout,authHandler,bearer,auth
+     *
+     * @return $this
+     */
     public function setUrl(string $url, $options = []): self
     {
+        $this->bearer($options['bearer'] ?? $this->bearerToken);
+
+        if (Arr::has($options, 'auth')) {
+            $this->basicAuth(
+                username: $options['auth'][0] ?? null,
+                password: $options['auth'][1] ?? null);
+        }
+
         app()->bind(RestClientInterface::class,
             function () use ($url, $options) {
                 return new static(
@@ -299,26 +324,26 @@ class RestClientService implements RestClientInterface
     /**
      * @throws Exception
      */
-    public function setUpAuthHandler(): void
+    public function setUpAuthHandler(): self
     {
         if (! in_array($this->authHandler, ['jwt', 'basic', null])) {
             throw new Exception('Invalid auth handler. Only support jwt and basic');
         }
 
         if ($this->authHandler === 'basic') {
-            $this->options = array_merge($this->options, [
-                'auth' => [
-                    config('rest-api-client.auth_handler_options.basic.username'),
-                    config('rest-api-client.auth_handler_options.basic.password'),
-                ],
-            ]);
+            $this->basicAuth(
+                username: config('rest-api-client.auth_handler_options.basic.username'),
+                password: config('rest-api-client.auth_handler_options.basic.password')
+            );
         } elseif ($this->authHandler === 'jwt') {
-            $this->withAuth(config('rest-api-client.auth_handler_options.jwt.token'));
+            $this->bearer(config('rest-api-client.auth_handler_options.jwt.token'));
         }
+
+        return $this;
     }
 
-    public function getOptions(): array
+    public function getBasicAuth(): array
     {
-        return $this->options;
+        return $this->basicHttpAuth;
     }
 }
