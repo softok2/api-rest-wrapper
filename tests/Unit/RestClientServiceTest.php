@@ -29,6 +29,7 @@ it('can process onSuccess hook', function () {
 
     $resp = app(RestClientInterface::class)
         ->onSuccess(fn () => 'success')
+        ->onFailures(fn($response) => dd($response->getException()))
         ->post(
             '/posts',
             [
@@ -42,6 +43,7 @@ it('can process onSuccess hook', function () {
 });
 
 it('can process onFailures hook', function () {
+
     forceBind();
 
     $resp = app(RestClientInterface::class)

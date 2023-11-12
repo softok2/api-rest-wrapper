@@ -272,27 +272,36 @@ class RestClientService implements RestClientInterface
      * Available key options are timeout,authHandler,bearer,auth
      *
      * @return $this
+     *
+     * @throws ReflectionException
      */
     public function setUrl(string $url, $options = []): self
     {
-        $this->bearer($options['bearer'] ?? $this->bearerToken);
+        $instance = new static(
+            url: $url,
+            timeout: $options['timeout'] ?? $this->timeout,
+            authHandler: $options['authHandler'] ?? $this->authHandler
+        );
+
+        $instance->bearer($options['bearer'] ?? $this->bearerToken);
+
 
         if (Arr::has($options, 'auth')) {
-            $this->basicAuth(
+            $instance->basicAuth(
                 username: $options['auth'][0] ?? null,
-                password: $options['auth'][1] ?? null);
+                password: $options['auth'][1] ?? null
+            );
         }
 
-        app()->bind(RestClientInterface::class,
-            function () use ($url, $options) {
-                return new static(
-                    url: $url,
-                    timeout: $options['timeout'] ?? $this->timeout,
-                    authHandler: $options['authHandler'] ?? $this->authHandler
-                );
-            });
 
-        return $this;
+        app()->bind(
+            RestClientInterface::class,
+            function () use ($instance) {
+                return $instance;
+            }
+        );
+
+        return $instance;
     }
 
     /**
