@@ -99,8 +99,8 @@ class RestClientService implements RestClientInterface
                 'Authorization',
                 'Bearer '.$this->bearerToken
             );
-        } elseif (! empty($this->auth)) {
-            $options['auth'] = $this->auth;
+        } elseif (! empty($this->getBasicAuth())) {
+            $options['auth'] = $this->getBasicAuth();
         }
 
         // Prepare request headers
