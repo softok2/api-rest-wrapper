@@ -34,6 +34,15 @@ interface RestClientInterface
     /**
      * @param  array<string, mixed>  $body
      */
+    public function put(
+        string $path,
+        array $body = [],
+        string $parametersOption = 'form_params'
+    ): mixed;
+
+    /**
+     * @param  array<string, mixed>  $body
+     */
     public function delete(
         string $path,
         array $body = [],

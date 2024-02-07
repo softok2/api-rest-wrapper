@@ -222,6 +222,21 @@ class RestClientService implements RestClientInterface
         return $this->sendRequest($payload);
     }
 
+    public function put(
+        string $path,
+        array $body = [],
+        string $parametersOption = 'form_params'
+    ): mixed {
+        $payload = new RequestPayload(
+            'PUT',
+            $path,
+            $body,
+            $parametersOption
+        );
+
+        return $this->sendRequest($payload);
+    }
+
     /**
      * {@inheritDoc}
      */
@@ -285,14 +300,12 @@ class RestClientService implements RestClientInterface
 
         $instance->bearer($options['bearer'] ?? $this->bearerToken);
 
-
         if (Arr::has($options, 'auth')) {
             $instance->basicAuth(
                 username: $options['auth'][0] ?? null,
                 password: $options['auth'][1] ?? null
             );
         }
-
 
         app()->bind(
             RestClientInterface::class,
